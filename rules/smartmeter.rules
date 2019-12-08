@@ -1,0 +1,13 @@
+rule "rSmartMeter"
+when
+    Item FroniusGrid changed
+then
+    if (FroniusGrid.state > 0) {
+        PowerToGrid.sendCommand(0)
+        PowerFromGrid.sendCommand(FroniusGrid.state as DecimalType)
+    }
+    else {
+        PowerFromGrid.sendCommand(0)
+        PowerToGrid.sendCommand(-(FroniusGrid.state as DecimalType))
+    }
+end

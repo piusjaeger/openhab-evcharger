@@ -1,0 +1,114 @@
+sitemap default label="evcharger" {
+	Frame label="Solar Power" {
+		Text item=FroniusPV label="Solar power [%.0f W]" icon="solarplant" {
+		Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+		Image url="http://localhost:8080/rrdchart.png?items=FroniusGrid,FroniusPV,OhmpilotACTotal,KebaPower&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+		Image url="http://localhost:8080/rrdchart.png?items=FroniusGrid,FroniusPV,OhmpilotACTotal,KebaPower&period=D" refresh=60000 visibility=[Chart_Period==1]
+		Image url="http://localhost:8080/rrdchart.png?items=FroniusGrid,FroniusPV,OhmpilotACTotal,KebaPower&period=W" refresh=60000 visibility=[Chart_Period==2]
+		Image url="http://localhost:8080/rrdchart.png?items=FroniusGrid,FroniusPV,OhmpilotACTotal,KebaPower&period=M" refresh=60000 visibility=[Chart_Period==3]
+		Image url="http://localhost:8080/rrdchart.png?items=FroniusGrid,FroniusPV,OhmpilotACTotal,KebaPower&period=Y" refresh=60000 visibility=[Chart_Period==4]
+		}
+	Text item=FroniusGrid label="Power from grid [%.0f W]" icon="gridpower" valuecolor=[>0="#FFA500",<=0="#008000"]
+	Text item=OhmpilotACTotal label="Ohmpilot power [%.0f W]" icon="heatingrod"
+		}
+	Frame label="Wallbox 1" {
+		Switch item=KebaEnabled label="Wallbox"
+		Selection item=PVChargeCarType label="Car type" mappings=[1="Tesla", 2="Renault Zoe"] icon="ecar"
+		Selection item=ChargeMode label="Charge mode" mappings=[1="Manuell", 2="Solarstrom", 3="Geplant"] icon="settings"
+		Text item=ChargeStartTime label="Start time [%s]" icon="time" visibility=[ChargeMode==3]
+		Setpoint item=ChargeStartH minValue=0 maxValue=23 step=1 label="Start time h" icon="time" visibility=[ChargeMode==3]
+		Setpoint item=ChargeStartM minValue=0 maxValue=45 step=15 label="Start time m" icon="time" visibility=[ChargeMode==3]
+		Setpoint item=PVChargeStartLimit step=350 minValue=0 maxValue=4550 label="Start on Power to Grid" icon="sun" visibility=[PVChargeMode=="ON"]
+		Text item=PVChargeStartLimit label="Start on power to grid [%.0f W]" icon="sun" visibility=[PVChargeMode=="ON"]
+		Text item=PVChargeStoppLimit label="Stopp on power from grid [%.0f W]" icon="gridpower" visibility=[PVChargeMode=="ON"]
+		Selection item=KebaCurrentRangeASelection label="Select current" mappings=[1="6A", 2="12A", 3="16A", 9="-"] icon="energy"
+	}
+	Frame label="State Wallbox 1" { 
+		Text item=KebaCurrentRangeA label="Current [%.1f A]" icon="energy" {
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaCurrentRangeA&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaCurrentRangeA&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaCurrentRangeA&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaCurrentRangeA&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaCurrentRangeA&period=Y" refresh=60000 visibility=[Chart_Period==4]
+		}
+		Text item=KebaVehiclePlugged label="Vehicle plugged [MAP(keba.map):%s]" icon="ecar"
+		Text item=KebaState label="State [MAP(keba.map):%s]" icon="settings"
+		Text item=KebaPower label="Power [%.0f W]" icon="energy" {
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaPower&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaPower&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaPower&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaPower&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaPower&period=Y" refresh=60000 visibility=[Chart_Period==4]
+		}
+		Text item=KebaSessionEnergykWh label="Session energy [%.2f kWh]" icon="energy" {
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaSessionEnergykWh&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaSessionEnergykWh&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaSessionEnergykWh&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaSessionEnergykWh&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaSessionEnergykWh&period=Y" refresh=60000 visibility=[Chart_Period==4]
+			}
+		Text item=KebaTotalEnergykWh label="Total energy [%.0f kWh]" icon="energy"{
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaTotalEnergykWh&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaTotalEnergykWh&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaTotalEnergykWh&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaTotalEnergykWh&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=KebaTotalEnergykWh&period=Y" refresh=60000 visibility=[Chart_Period==4]
+		}
+	}
+	Frame label="Wallbox 2" {
+		Switch item=Keba2Enabled label="Wallbox"
+		Selection item=PVCharge2CarType label="Car type" mappings=[1="Tesla", 2="Renault Zoe"] icon="ecar"
+		Selection item=Charge2Mode label="Charge mode" mappings=[1="Manuell", 2="Solarstrom", 3="Geplant"] icon="settings"
+		Text item=Charge2StartTime label="Start time [%s]" icon="time" visibility=[Charge2Mode==3]
+		Setpoint item=Charge2StartH minValue=0 maxValue=23 step=1 label="Start time h" icon="time" visibility=[Charge2Mode==3]
+		Setpoint item=Charge2StartM minValue=0 maxValue=45 step=15 label="Start time m" icon="time" visibility=[Charge2Mode==3]
+		Setpoint item=PVCharge2StartLimit step=440 minValue=0 maxValue=4400 label="Start on Power to Grid" icon="sun" visibility=[PVCharge2Mode=="ON"]
+		Text item=PVCharge2StartLimit label="Start on power to grid [%.0f W]" icon="sun" visibility=[PVCharge2Mode=="ON"]
+		Text item=PVCharge2StoppLimit label="Stopp on power from grid [%.0f W]" icon="gridpower" visibility=[PVCharge2Mode=="ON"]
+		Selection item=Keba2CurrentRangeASelection label="Select current" mappings=[1="6A", 2="12A", 3="16A", 9="-"] icon="energy"
+	}
+	Frame label="State Wallbox 2" { 
+		Text item=Keba2CurrentRangeA label="Current [%.1f A]" icon="energy" {
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2CurrentRangeA&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2CurrentRangeA&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2CurrentRangeA&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2CurrentRangeA&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2CurrentRangeA&period=Y" refresh=60000 visibility=[Chart_Period==4]
+		}
+		Text item=Keba2VehiclePlugged label="Vehicle plugged [MAP(keba.map):%s]" icon="ecar"
+		Text item=Keba2State label="State [MAP(keba.map):%s]" icon="settings"
+		Text item=Keba2Power label="Power [%.0f W]" icon="energy" {
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2Power&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2Power&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2Power&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2Power&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2Power&period=Y" refresh=60000 visibility=[Chart_Period==4]
+		}
+		Text item=Keba2SessionEnergykWh label="Session energy [%.2f kWh]" icon="energy" {
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2SessionEnergykWh&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2SessionEnergykWh&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2SessionEnergykWh&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2SessionEnergykWh&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2SessionEnergykWh&period=Y" refresh=60000 visibility=[Chart_Period==4]
+			}
+		Text item=Keba2TotalEnergykWh label="Total engergy [%.0f kWh]" icon="energy"{
+			Switch item=Chart_Period mappings=[0="H",1="D",2="W",3="M",4="Y"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2TotalEnergykWh&period=h" refresh=60000 visibility=[Chart_Period==0,Chart_Period=="Uninitialized"]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2TotalEnergykWh&period=D" refresh=60000 visibility=[Chart_Period==1]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2TotalEnergykWh&period=W" refresh=60000 visibility=[Chart_Period==2]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2TotalEnergykWh&period=M" refresh=60000 visibility=[Chart_Period==3]
+			Image url="http://localhost:8080/rrdchart.png?items=Keba2TotalEnergykWh&period=Y" refresh=60000 visibility=[Chart_Period==4]
+		}
+	}
+	Frame label="Delay Wallboxes"{
+		Text item=KebaDelay label="+- Ampere  [MAP(chargemode.map):%s]" icon=clock
+		Text item=KebaOnOffDelay label="On/Off Wallboxes [MAP(chargemode.map):%s]" icon=clock
+	}
+}

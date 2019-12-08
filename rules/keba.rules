@@ -1,0 +1,122 @@
+rule "rKebaSessionEnergy"
+when
+	Item KebaSessionEnergy changed
+then
+	KebaSessionEnergykWh.sendCommand(KebaSessionEnergy.state as DecimalType / 1000)
+end
+
+rule "rKeba2SessionEnergy"
+when
+	Item Keba2SessionEnergy changed
+then
+	Keba2SessionEnergykWh.sendCommand(Keba2SessionEnergy.state as DecimalType / 1000)
+end
+
+rule "rKebaTotalEnergy"
+when
+	Item KebaTotalEnergy changed
+then
+	KebaTotalEnergykWh.sendCommand(KebaTotalEnergy.state as Number / 1000)
+end
+
+rule "rKeba2TotalEnergy"
+when
+	Item Keba2TotalEnergy changed
+then
+	Keba2TotalEnergykWh.sendCommand(Keba2TotalEnergy.state as Number / 1000)
+end
+
+rule "rKebaAmpereSelection"
+when
+	Item KebaCurrentRangeASelection changed
+then
+	if (KebaCurrentRangeASelection.state == 1) {
+		KebaCurrentRangeA.sendCommand(6)
+	}
+	else if (KebaCurrentRangeASelection.state == 2) {
+		KebaCurrentRangeA.sendCommand(12)
+	}
+		else if (KebaCurrentRangeASelection.state == 3) {
+		KebaCurrentRangeA.sendCommand(16)
+	}
+end
+
+rule "rKeba2AmpereSelection"
+when
+	Item Keba2CurrentRangeASelection changed
+then
+	if (Keba2CurrentRangeASelection.state == 1) {
+		Keba2CurrentRangeA.sendCommand(6)
+	}
+	if (Keba2CurrentRangeASelection.state == 2) {
+		Keba2CurrentRangeA.sendCommand(12)
+	}
+	else if (Keba2CurrentRangeASelection.state == 3) {
+		Keba2CurrentRangeA.sendCommand(16)
+	}
+end
+
+rule "rKebaAmpereSelectionStatus"
+when
+	Item KebaCurrentRangeA changed 
+then
+	if (KebaCurrentRangeA.state == 6) {
+		KebaCurrentRangeASelection.sendCommand(1)
+	}
+	else if (KebaCurrentRangeA.state == 12) {
+		KebaCurrentRangeASelection.sendCommand(2)
+	}
+	else if (KebaCurrentRangeA.state == 16) {
+		KebaCurrentRangeASelection.sendCommand(3)
+	}
+	else {
+		KebaCurrentRangeASelection.sendCommand(9)
+	}
+end
+
+rule "rKeba2AmpereSelectionStatus"
+when
+	Item Keba2CurrentRangeA changed 
+then
+	if (Keba2CurrentRangeA.state == 6) {
+		Keba2CurrentRangeASelection.sendCommand(1)
+	}
+	else if (Keba2CurrentRangeA.state == 12) {
+		Keba2CurrentRangeASelection.sendCommand(2)
+	}
+	else if (Keba2CurrentRangeA.state == 16) {
+		Keba2CurrentRangeASelection.sendCommand(3)
+	}
+	else {
+		Keba2CurrentRangeASelection.sendCommand(9)
+	}
+end
+
+
+rule "rKebaA2Percent"
+when
+	Item KebaCurrentRangeA changed
+then
+	KebaCurrentRange.sendCommand((((KebaCurrentRangeA.state as DecimalType) -6) / 0.1).intValue)
+end
+
+rule "rKeba2A2Percent"
+when
+	Item Keba2CurrentRangeA changed
+then
+	Keba2CurrentRange.sendCommand((((Keba2CurrentRangeA.state as DecimalType) -6) / 0.1).intValue)
+end
+
+rule "rKebaPercent2A"
+when
+	Item KebaCurrentRange changed
+then
+	KebaCurrentRangeA.sendCommand((KebaCurrentRange.state as DecimalType) * 0.1 + 6)
+end
+
+rule "rKeba2Percent2A"
+when
+	Item Keba2CurrentRange changed
+then
+	Keba2CurrentRangeA.sendCommand((Keba2CurrentRange.state as DecimalType) * 0.1 + 6)
+end

@@ -1,0 +1,416 @@
+rule "InitializeOnStartup"
+when
+	System started
+then
+KebaOnOffDelay.sendCommand(OFF)
+KebaDelay.sendCommand(OFF)
+end
+
+rule "rPVChargeStoppLimit"
+when 
+	Item PVChargeStartLimit changed or
+	Item PVChargeCarType changed
+then
+	if (PVChargeCarType.state == 1) {
+		PVChargeStoppLimit.sendCommand(4500 - (PVChargeStartLimit.state as DecimalType).intValue)
+	}
+	else if (PVChargeCarType.state == 2) {
+		PVChargeStoppLimit.sendCommand(5400 - (PVChargeStartLimit.state as DecimalType).intValue)
+	}
+end
+
+rule "rPVCharge2StoppLimit"
+when 
+	Item PVCharge2StartLimit changed or
+	Item PVCharge2CarType changed
+then
+	if (PVCharge2CarType.state == 1) {
+		PVCharge2StoppLimit.sendCommand(4500 - (PVCharge2StartLimit.state as DecimalType).intValue)
+	}
+	else if (PVCharge2CarType.state == 2) {
+		PVCharge2StoppLimit.sendCommand(5400 - (PVCharge2StartLimit.state as DecimalType).intValue)
+	}
+end
+
+rule "rPVChargeStart"
+when Item FroniusPV changed
+then
+if (KebaOnOffDelay.state != ON) {
+	if (PVChargeMode.state == ON && KebaVehiclePlugged.state == ON && KebaEnabled.state == OFF && PVCharge2Mode.state == ON && Keba2VehiclePlugged.state == ON && Keba2Enabled.state == OFF) {
+		if ((PVChargeStartLimit.state as Number) < (PVCharge2StartLimit.state as Number)) {
+			if ((OhmpilotACTotal.state as DecimalType + PowerToGrid.state as DecimalType) > PVChargeStartLimit.state as DecimalType) {
+				KebaEnabled.sendCommand(ON)
+				KebaOnOffDelay.sendCommand(ON)
+				KebaDelay.sendCommand(ON)
+			}
+		}
+		else {
+			if ((OhmpilotACTotal.state as DecimalType + PowerToGrid.state as DecimalType) > PVCharge2StartLimit.state as DecimalType) {
+			Keba2Enabled.sendCommand(ON)
+			KebaOnOffDelay.sendCommand(ON)
+			KebaDelay.sendCommand(ON)	
+			}
+		}
+	}
+	else if (PVChargeMode.state == ON && KebaVehiclePlugged.state == ON && KebaEnabled.state == OFF) {
+		if ((OhmpilotACTotal.state as DecimalType + PowerToGrid.state as DecimalType) > PVChargeStartLimit.state as DecimalType) {
+			KebaEnabled.sendCommand(ON)
+			KebaOnOffDelay.sendCommand(ON)
+			KebaDelay.sendCommand(ON)
+		}
+	}
+	else if (PVCharge2Mode.state == ON && Keba2VehiclePlugged.state == ON && Keba2Enabled.state == OFF) {
+		if ((OhmpilotACTotal.state as DecimalType + PowerToGrid.state as DecimalType) > PVCharge2StartLimit.state as DecimalType) {
+			Keba2Enabled.sendCommand(ON)
+			KebaOnOffDelay.sendCommand(ON)
+			KebaDelay.sendCommand(ON)	
+		}
+	}
+}
+end
+
+rule "rPVChargeStopp"
+when
+	Item PowerFromGrid changed
+then
+	if (KebaOnOffDelay.state != ON) {
+		if (PVChargeMode.state == ON && KebaEnabled.state == ON && PVCharge2Mode.state == ON && Keba2Enabled.state == ON) {
+			if ((PVChargeStoppLimit.state as Number) < (PVCharge2StoppLimit.state as Number)) {
+				if ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType ) > PVChargeStoppLimit.state as DecimalType)  {
+					if (PVChargeCarType.state == 1 && KebaCurrentRangeA.state < 6.1 ) {
+						KebaEnabled.sendCommand(OFF)
+						KebaOnOffDelay.sendCommand(ON)
+					}
+					else if (PVChargeCarType.state == 2 && KebaCurrentRangeA.state < 12.1 ) {
+						Keba2Enabled.sendCommand(OFF)
+						KebaOnOffDelay.sendCommand(ON)
+					}
+				}
+			}
+			else {
+				if ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType ) > PVCharge2StoppLimit.state as DecimalType)  {
+					if (PVCharge2CarType.state == 1 && Keba2CurrentRangeA.state < 6.1 ) {
+						Keba2Enabled.sendCommand(OFF)
+						KebaOnOffDelay.sendCommand(ON)
+					}
+					else if (PVCharge2CarType.state == 2 && Keba2CurrentRangeA.state < 12.1 ) {
+						Keba2Enabled.sendCommand(OFF)
+						KebaOnOffDelay.sendCommand(ON)
+					}
+				}
+			}
+		}
+		else if (PVChargeMode.state == ON && KebaEnabled.state == ON) {
+			if ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType ) > PVChargeStoppLimit.state as DecimalType)  {
+				if (PVChargeCarType.state == 1 && KebaCurrentRangeA.state < 6.1 ) {
+					KebaEnabled.sendCommand(OFF)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else if (PVChargeCarType.state == 2 && KebaCurrentRangeA.state < 12.1 ) {
+					Keba2Enabled.sendCommand(OFF)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+		else if (PVCharge2Mode.state == ON && Keba2Enabled.state == ON) {
+			if ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType ) > PVCharge2StoppLimit.state as DecimalType)  {
+				if (PVCharge2CarType.state == 1 && Keba2CurrentRangeA.state < 6.1 ) {
+					Keba2Enabled.sendCommand(OFF)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else if (PVCharge2CarType.state == 2 && Keba2CurrentRangeA.state < 12.1 ) {
+					Keba2Enabled.sendCommand(OFF)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+	}
+end
+
+rule "rPVChargePowerMinus"
+when
+	Item PowerFromGrid changed
+then
+	if (PVChargeMode.state == ON && KebaDelay.state != ON && KebaState.state == 3 && KebaVehiclePlugged.state == ON && PowerFromGrid.state > 0) {
+		if (PVChargeCarType.state == 1) {
+			if (KebaCurrentRangeA.state > 6) {
+				if ((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 200) / 690) > 6) {
+					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					KebaCurrentRangeA.sendCommand(6)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+		else if (PVChargeCarType.state == 2) {
+			if (KebaCurrentRangeA.state > 12) {
+				if ((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 500) / 690) > 12) {
+					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					KebaCurrentRangeA.sendCommand(12)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+	}
+end
+
+rule "rPVCharge2PowerMinus"
+when
+	Item PowerFromGrid changed
+then
+	if (PVCharge2Mode.state == ON && KebaDelay.state != ON && Keba2State.state == 3 && PowerFromGrid.state > 0) {
+		if (PVCharge2CarType.state == 1) {
+			if (Keba2CurrentRangeA.state > 6) {
+				if ((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 200) / 690) > 6) {
+					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					Keba2CurrentRangeA.sendCommand(6)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+		else if (PVCharge2CarType.state == 2) {
+			if (Keba2CurrentRangeA.state > 12) {
+				if ((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 500) / 690) > 12) {
+					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					Keba2CurrentRangeA.sendCommand(12)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+	}
+end
+
+rule "rPVChargePowerPlus"
+when
+	Item PowerToGrid changed or
+	Item OhmpilotACTotal changed
+then
+	if (PVChargeMode.state == ON && KebaDelay.state != ON && KebaState.state == 3) {
+		if (PVChargeCarType.state == 1) {
+			if (KebaCurrentRangeA.state < 16) {
+				if ((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690) < 16) {
+					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					KebaCurrentRangeA.sendCommand(16)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+		else if (PVChargeCarType.state == 2) {
+			if (KebaCurrentRangeA.state < 16) {
+				if ((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690) < 16) {
+					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					KebaCurrentRangeA.sendCommand(16)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}			
+		}
+	}
+end
+
+rule "rPVCharge2PowerPlus"
+when
+	Item PowerToGrid changed or
+	Item OhmpilotACTotal changed
+then
+	if (PVCharge2Mode.state == ON && KebaDelay.state != ON && Keba2State.state == 3) {
+		if (PVCharge2CarType.state == 1) {
+			if (Keba2CurrentRangeA.state < 16) {
+				if ((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690) < 16) {
+					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					Keba2CurrentRangeA.sendCommand(16)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+		else if (PVCharge2CarType.state == 2) {
+			if (Keba2CurrentRangeA.state < 16) {
+				if ((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690) < 16) {
+					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690))
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+				else {
+					Keba2CurrentRangeA.sendCommand(16)
+					KebaDelay.sendCommand(ON)
+					KebaOnOffDelay.sendCommand(ON)
+				}
+			}
+		}
+	}
+end
+
+rule "rPVChargeResetA"
+when	
+ 	Item PVChargeCarType changed or
+	Item KebaVehiclePlugged changed or
+	Item KebaState changed or
+	Item PVChargeMode changed	
+then
+	if (ChargeMode.state == 2) {
+		if (PVChargeCarType.state == 2) {
+			KebaCurrentRangeA.sendCommand(12)
+		}
+		else {
+			KebaCurrentRangeA.sendCommand(6)
+		}
+	}
+	else {
+		KebaCurrentRangeA.sendCommand(16)
+	}	
+end
+
+rule "rPVCharge2ResetA"
+when	
+ 	Item PVCharge2CarType changed or
+	Item Keba2VehiclePlugged changed or
+	Item Keba2State changed or
+	Item PVCharge2Mode changed	
+then
+	if (Charge2Mode.state == 2) {
+		if (PVCharge2CarType.state == 2) {
+			Keba2CurrentRangeA.sendCommand(12)
+		}
+		else {
+			Keba2CurrentRangeA.sendCommand(6)
+		}
+	}
+	else {
+		Keba2CurrentRangeA.sendCommand(16)
+	}
+end
+
+rule "rPVChargeZoeMinA"
+when
+	Item KebaCurrentRangeA changed
+then
+	if (PVChargeCarType.state == 2 && KebaCurrentRangeA.state < 12) {
+		KebaCurrentRangeA.sendCommand(12)
+	}
+end
+
+rule "rPVCharge2ZoeMinA"
+when
+	Item Keba2CurrentRangeA changed
+then
+	if (PVCharge2CarType.state == 2 && Keba2CurrentRangeA.state < 12) {
+		Keba2CurrentRangeA.sendCommand(12)
+	}
+end
+
+rule "rPVChargeMode"
+when 
+	Item ChargeMode changed or
+	Item KebaVehiclePlugged changed
+then
+	if (ChargeMode.state == 1) {
+		PVChargeMode.sendCommand(OFF)
+		KebaEnabled.sendCommand(ON)
+	}
+	if(ChargeMode.state == 2) {
+		PVChargeMode.sendCommand(ON)
+		KebaEnabled.sendCommand(OFF)
+		KebaDelay.sendCommand(OFF)
+		KebaOnOffDelay.sendCommand(OFF)
+	}
+	if (ChargeMode.state == 3) {
+		PVChargeMode.sendCommand(OFF)
+		KebaEnabled.sendCommand(OFF)
+	}
+end
+
+rule "rPVCharge2Mode"
+when 
+	Item Charge2Mode changed or
+	Item Keba2VehiclePlugged changed
+then
+	if (Charge2Mode.state == 1) {
+		PVCharge2Mode.sendCommand(OFF)
+		Keba2Enabled.sendCommand(ON)
+	}
+	if(Charge2Mode.state == 2) {
+		PVCharge2Mode.sendCommand(ON)
+		Keba2Enabled.sendCommand(OFF)
+		KebaDelay.sendCommand(OFF)
+		KebaOnOffDelay.sendCommand(OFF)
+	}
+	if (Charge2Mode.state == 3) {
+		PVCharge2Mode.sendCommand(OFF)
+		Keba2Enabled.sendCommand(OFF)
+	}
+end
+
+rule "rChargeSchedulerOn"
+when 
+	Time cron "0 * * * * ?"
+then
+	if (ChargeMode.state == 3) {
+		if ((ChargeStartM.state as Number).intValue == now.getMinuteOfHour && (ChargeStartH.state as Number).intValue == now.getHourOfDay) {
+			logInfo("FILE","Geplante EV Ladung grosse Garage gestartet")
+			KebaEnabled.sendCommand(ON)
+			ChargeMode.sendCommand(1)
+		}
+	}
+end
+
+rule "rCharge2SchedulerOn"
+when 
+	Time cron "0 * * * * ?"
+then
+	if (Charge2Mode.state == 3) {
+		if ((Charge2StartM.state as Number).intValue == now.getMinuteOfHour && (Charge2StartH.state as Number).intValue == now.getHourOfDay) {
+			logInfo("FILE","Geplante EV Ladung kleine Garage gestartet")
+			Keba2Enabled.sendCommand(ON)
+			Charge2Mode.sendCommand(1)
+		}
+	}
+end
+
+rule "rChargeStartTime"
+when
+	Item ChargeStartH changed or
+	Item ChargeStartM changed
+then
+	ChargeStartTime.postUpdate(ChargeStartH.state.toString + ":" + ChargeStartM.state.toString)
+end
+
+rule "rChargeStart2Time"
+when
+	Item Charge2StartH changed or
+	Item Charge2StartM changed
+then
+	Charge2StartTime.postUpdate(Charge2StartH.state.toString + ":" + Charge2StartM.state.toString)
+end

@@ -1,0 +1,42 @@
+Number FroniusGrid "Fronius power [%.0f W]" { http="<[http://<IP_Fronius-inverter>/<id1>.fcgi:60000:JSONPATH($.Body.Data.Site.P_Grid)]"} 
+Number PowerToGrid "Power to grid [%.0f W]"
+Number PowerFromGrid "Power from grid [%.0f W]"
+Number FroniusPV "Power [%.0f W]" { http="<[http://<IP_Fronius-inverter>/solar_api/v1/GetPowerFlowRealtimeData.fcgi:60000:JSONPATH($.Body.Data.Site.P_PV)]"} 
+Number FroniusEDay "Yield day [%.0f kWh]" { http="<[http://<IP_Fronius-inverter>/solar_api/v1/GetPowerFlowRealtimeData.fcgi:60000:JSONPATH($.Body.Data.Site.E_Day)]"}
+Number FroniusEYear "Yeald year [%.0f kWh]" { http="<[http://<IP_Fronius-inverter>/solar_api/v1/GetPowerFlowRealtimeData.fcgi:60000:JSONPATH($.Body.Data.Site.E_Year)]"}
+Number FroniusETotal "Yield today [%.0f kWh]" { http="<[http://<IP_Fronius-inverter>/solar_api/v1/GetPowerFlowRealtimeData.fcgi:60000:JSONPATH($.Body.Data.Site.E_Total)]"}
+Number OhmpilotACTotal "Ohmpilot power [%.0f W]" { http="<[http://<IP_Fronius-inverter>/solar_api/v1/GetPowerFlowRealtimeData.fcgi:60000:JSONPATH($.Body.Data.Smartloads.Ohmpilots.720896.P_AC_Total)]"} 
+Number OhmpilotTemperature "Ohmpilot temperature [%.1f °C]" { http="<[http://<IP_Fronius-inverter>/solar_api/v1/GetPowerFlowRealtimeData.fcgi:300000:JSONPATH($.Body.Data.Smartloads.Ohmpilots.720896.Temperature)]"} 
+Switch PVChargeMode
+Switch PVCharge2Mode
+Number PVChargeStartLimit
+Number PVCharge2StartLimit
+Number PVChargeStoppLimit
+Number PVCharge2StoppLimit
+Number PVChargeCarType
+Number PVCharge2CarType
+Number ChargeStartH
+Number Charge2StartH
+Number ChargeStartM
+Number Charge2StartM
+String ChargeStartTime
+String Charge2StartTime
+Number ChargeMode
+Number Charge2Mode
+Number Chart_Period "Period"
+Number KebaSessionEnergy  {channel="keba:kecontact:<id1>:sessionconsumption"}
+Number Keba2SessionEnergy  {channel="keba:kecontact:<id2>:sessionconsumption"}
+Number KebaTotalEnergy  {channel="keba:kecontact:<id1>:totalconsumption"}
+Number Keba2TotalEnergy  {channel="keba:kecontact:<id2>:totalconsumption"}
+Number KebaPower "Keba Wallbox 1"  {channel="keba:kecontact:<id1>:power", autoupdate="false"}
+Number Keba2Power "Keba Wallbox 2"  {channel="keba:kecontact:<id2>:power", autoupdate="false"}
+Number KebaCurrentRangeASelection
+Number Keba2CurrentRangeASelection
+Number KebaCurrentRangeA
+Number Keba2CurrentRangeA
+Number KebaSessionEnergykWh
+Number Keba2SessionEnergykWh
+Number KebaTotalEnergykWh
+Number Keba2TotalEnergykWh
+Switch KebaDelay { expire="2m,command=OFF"} 
+Switch KebaOnOffDelay { expire="5m,command=OFF"}

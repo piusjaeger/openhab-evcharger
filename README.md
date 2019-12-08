@@ -7,7 +7,7 @@ Charging modes:
 - Scheduled
 
 Hardware used:
-2 KEBA KeContact P30 Wallboxes
+- 2 KEBA KeContact P30 Wallboxes
 - Fronius Symo Inverter with Fronius Datamanager
 - Fronius Smartmeter
 - Fronius Ohmpilot

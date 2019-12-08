@@ -1,5 +1,5 @@
 # openhab-evcharger
-OpenHAB Rules to manage Electric Vehicle Charging. 
+OpenHAB rules to manage Electric Vehicle charging. 
 
 Charging modes: 
 - Manual

@@ -16,6 +16,7 @@ Hardware used:
 
 Smarthome System:
 OpenHAB 2.4
+https://www.openhab.org/
 
-Keba Binding 2.5.0-SNAPSHOT
+Keba Binding: 2.5.0-SNAPSHOT
 https://github.com/openhab/openhab2-addons/blob/09f0c8d53b00d185ba10d16a584e7cf5cba73b76/bundles/org.openhab.binding.keba/README.md 

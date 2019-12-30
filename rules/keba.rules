@@ -31,13 +31,13 @@ when
 	Item KebaCurrentRangeASelection changed
 then
 	if (KebaCurrentRangeASelection.state == 1) {
-		KebaCurrentRangeA.sendCommand(6)
+		KebaCurrentRange.sendCommand(0)
 	}
 	else if (KebaCurrentRangeASelection.state == 2) {
-		KebaCurrentRangeA.sendCommand(12)
+		KebaCurrentRange.sendCommand(60)
 	}
-		else if (KebaCurrentRangeASelection.state == 3) {
-		KebaCurrentRangeA.sendCommand(16)
+	else if (KebaCurrentRangeASelection.state == 3) {
+		KebaCurrentRange.sendCommand(100)
 	}
 end
 
@@ -46,27 +46,27 @@ when
 	Item Keba2CurrentRangeASelection changed
 then
 	if (Keba2CurrentRangeASelection.state == 1) {
-		Keba2CurrentRangeA.sendCommand(6)
+		Keba2CurrentRange.sendCommand(0)
 	}
 	if (Keba2CurrentRangeASelection.state == 2) {
-		Keba2CurrentRangeA.sendCommand(12)
+		Keba2CurrentRange.sendCommand(60)
 	}
 	else if (Keba2CurrentRangeASelection.state == 3) {
-		Keba2CurrentRangeA.sendCommand(16)
+		Keba2CurrentRange.sendCommand(100)
 	}
 end
 
 rule "rKebaAmpereSelectionStatus"
 when
-	Item KebaCurrentRangeA changed 
+	Item KebaCurrentRange changed 
 then
-	if (KebaCurrentRangeA.state == 6) {
+	if (KebaCurrentRange.state == 0) {
 		KebaCurrentRangeASelection.sendCommand(1)
 	}
-	else if (KebaCurrentRangeA.state == 12) {
+	else if (KebaCurrentRange.state == 60) {
 		KebaCurrentRangeASelection.sendCommand(2)
 	}
-	else if (KebaCurrentRangeA.state == 16) {
+	else if (KebaCurrentRange.state == 100) {
 		KebaCurrentRangeASelection.sendCommand(3)
 	}
 	else {
@@ -76,35 +76,20 @@ end
 
 rule "rKeba2AmpereSelectionStatus"
 when
-	Item Keba2CurrentRangeA changed 
+	Item Keba2CurrentRange changed 
 then
-	if (Keba2CurrentRangeA.state == 6) {
+	if (Keba2CurrentRange.state == 0) {
 		Keba2CurrentRangeASelection.sendCommand(1)
 	}
-	else if (Keba2CurrentRangeA.state == 12) {
+	else if (Keba2CurrentRange.state == 60) {
 		Keba2CurrentRangeASelection.sendCommand(2)
 	}
-	else if (Keba2CurrentRangeA.state == 16) {
+	else if (Keba2CurrentRange.state == 100) {
 		Keba2CurrentRangeASelection.sendCommand(3)
 	}
 	else {
 		Keba2CurrentRangeASelection.sendCommand(9)
 	}
-end
-
-
-rule "rKebaA2Percent"
-when
-	Item KebaCurrentRangeA changed
-then
-	KebaCurrentRange.sendCommand((((KebaCurrentRangeA.state as DecimalType) -6) / 0.1).intValue)
-end
-
-rule "rKeba2A2Percent"
-when
-	Item Keba2CurrentRangeA changed
-then
-	Keba2CurrentRange.sendCommand((((Keba2CurrentRangeA.state as DecimalType) -6) / 0.1).intValue)
 end
 
 rule "rKebaPercent2A"

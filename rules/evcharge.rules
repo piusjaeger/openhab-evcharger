@@ -4,39 +4,28 @@ when
 then
 	KebaOnOffDelay.sendCommand(OFF)
 	KebaDelay.sendCommand(OFF)
+	PoolHeatingOffTimer.sendCommand(OFF)
 end
 
 rule "rPVChargeStoppLimit"
 when 
-	Item PVChargeStartLimit changed or
-	Item PVChargeCarType changed
+	Item PVChargeStartLimit changed
 then
-	if (PVChargeCarType.state == 1) {
-		PVChargeStoppLimit.sendCommand(4500 - (PVChargeStartLimit.state as DecimalType).intValue)
-	}
-	else if (PVChargeCarType.state == 2) {
-		PVChargeStoppLimit.sendCommand(5400 - (PVChargeStartLimit.state as DecimalType).intValue)
-	}
+	PVChargeStoppLimit.sendCommand(4500 - (PVChargeStartLimit.state as DecimalType).intValue)
 end
 
 rule "rPVCharge2StoppLimit"
 when 
-	Item PVCharge2StartLimit changed or
-	Item PVCharge2CarType changed
+	Item PVCharge2StartLimit changed
 then
-	if (PVCharge2CarType.state == 1) {
-		PVCharge2StoppLimit.sendCommand(4500 - (PVCharge2StartLimit.state as DecimalType).intValue)
-	}
-	else if (PVCharge2CarType.state == 2) {
-		PVCharge2StoppLimit.sendCommand(5400 - (PVCharge2StartLimit.state as DecimalType).intValue)
-	}
+	PVCharge2StoppLimit.sendCommand(5400 - (PVCharge2StartLimit.state as DecimalType).intValue)
 end
 
 rule "rPVChargeStart"
 when Item FroniusPV changed
 then
 if (KebaOnOffDelay.state != ON) {
-	if (PVChargeMode.state == ON && KebaVehiclePlugged.state == ON && KebaEnabled.state == OFF && PVCharge2Mode.state == ON && Keba2VehiclePlugged.state == ON && Keba2Enabled.state == OFF) {
+	if (ChargeMode.state == 2 && KebaVehiclePlugged.state == ON && KebaEnabled.state == OFF && Charge2Mode.state == 2 && Keba2VehiclePlugged.state == ON && Keba2Enabled.state == OFF) {
 		if ((PVChargeStartLimit.state as Number) < (PVCharge2StartLimit.state as Number)) {
 			if ((OhmpilotACTotal.state as DecimalType + PowerToGrid.state as DecimalType) > PVChargeStartLimit.state as DecimalType) {
 				KebaEnabled.sendCommand(ON)
@@ -52,14 +41,14 @@ if (KebaOnOffDelay.state != ON) {
 			}
 		}
 	}
-	else if (PVChargeMode.state == ON && KebaVehiclePlugged.state == ON && KebaEnabled.state == OFF) {
+	else if (ChargeMode.state == 2 && KebaVehiclePlugged.state == ON && KebaEnabled.state == OFF) {
 		if ((OhmpilotACTotal.state as DecimalType + PowerToGrid.state as DecimalType) > PVChargeStartLimit.state as DecimalType) {
 			KebaEnabled.sendCommand(ON)
 			KebaOnOffDelay.sendCommand(ON)
 			KebaDelay.sendCommand(ON)
 		}
 	}
-	else if (PVCharge2Mode.state == ON && Keba2VehiclePlugged.state == ON && Keba2Enabled.state == OFF) {
+	else if (Charge2Mode.state == 2 && Keba2VehiclePlugged.state == ON && Keba2Enabled.state == OFF) {
 		if ((OhmpilotACTotal.state as DecimalType + PowerToGrid.state as DecimalType) > PVCharge2StartLimit.state as DecimalType) {
 			Keba2Enabled.sendCommand(ON)
 			KebaOnOffDelay.sendCommand(ON)
@@ -69,150 +58,56 @@ if (KebaOnOffDelay.state != ON) {
 }
 end
 
-rule "rPVChargePowerPlus"
+rule "rPVChargePowerAdjust"
 when
-	Item PowerToGrid changed or
-	Item OhmpilotACTotal changed
+	Item OhmpilotACTotal changed or
+	Item FroniusGrid changed
 then
-	if (PVChargeMode.state == ON && KebaDelay.state != ON && KebaState.state == 3) {
-		if (PVChargeCarType.state == 1) {
-			if ((KebaCurrentRangeA.state as Number) < 16) {
-				if ((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690) < 16) {
-					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					KebaCurrentRangeA.sendCommand(16)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
+	if (ChargeMode.state == 2 && KebaDelay.state != ON && KebaState.state == 3) {
+		KebaCurrentRangeDiff.sendCommand(((OhmpilotACTotal.state as DecimalType - FroniusGrid.state as DecimalType - 100) / 68).intValue)	
+		if ((KebaCurrentRange.state as Number + KebaCurrentRangeDiff.state as Number) < 0) {
+			if (KebaCurrentRange.state != 0) {
+				KebaCurrentRange.sendCommand(0)
+				KebaDelay.sendCommand(ON)
+				KebaOnOffDelay.sendCommand(ON)
 			}
 		}
-		else if (PVChargeCarType.state == 2) {
-			if ((KebaCurrentRangeA.state as Number) < 16) {
-				if ((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690) < 16) {
-					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					KebaCurrentRangeA.sendCommand(16)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-			}			
+		else if ((KebaCurrentRange.state as Number + KebaCurrentRangeDiff.state as Number) > 100) {
+			if (KebaCurrentRange.state != 100) {
+			KebaCurrentRange.sendCommand(100)
+			KebaDelay.sendCommand(ON)
+			KebaOnOffDelay.sendCommand(ON)
+			}
 		}
+		else {
+			KebaCurrentRange.sendCommand(KebaCurrentRange.state as Number + KebaCurrentRangeDiff.state as Number)
+			KebaDelay.sendCommand(ON)
+			KebaOnOffDelay.sendCommand(ON)
+		}	
 	}
-end
-
-rule "rPVCharge2PowerPlus"
-when
-	Item PowerToGrid changed or
-	Item OhmpilotACTotal changed
-then
-	if (PVCharge2Mode.state == ON && KebaDelay.state != ON && Keba2State.state == 3) {
-		if (PVCharge2CarType.state == 1) {
-			if ((Keba2CurrentRangeA.state as Number) < 16) {
-				if ((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690) < 16) {
-					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -200) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					Keba2CurrentRangeA.sendCommand(16)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
+	//Renault Zoe, min. Current 12A
+	if (Charge2Mode.state == 2 && KebaDelay.state != ON && Keba2State.state == 3) {
+		KebaCurrentRangeDiff.sendCommand(((OhmpilotACTotal.state as DecimalType - FroniusGrid.state as DecimalType - 900) / 68).intValue)	
+		if ((Keba2CurrentRange.state as Number + KebaCurrentRangeDiff.state as Number) < 60) {
+			if (Keba2CurrentRange.state != 60) {
+				Keba2CurrentRange.sendCommand(60)
+				KebaDelay.sendCommand(ON)
+				KebaOnOffDelay.sendCommand(ON)
 			}
 		}
-		else if (PVCharge2CarType.state == 2) {
-			if ((Keba2CurrentRangeA.state as Number) < 16) {
-				if ((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690) < 16) {
-					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) + ((PowerToGrid.state as DecimalType + OhmpilotACTotal.state as DecimalType -900) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					Keba2CurrentRangeA.sendCommand(16)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
+		else if ((Keba2CurrentRange.state as Number + KebaCurrentRangeDiff.state as Number) > 100) {
+			if (Keba2CurrentRange.state != 100) {
+			Keba2CurrentRange.sendCommand(100)
+			KebaDelay.sendCommand(ON)
+			KebaOnOffDelay.sendCommand(ON)
 			}
 		}
-	}
-end
-
-rule "rPVChargePowerMinus"
-when
-	Item PowerFromGrid changed
-then
-	if (PVChargeMode.state == ON && KebaDelay.state != ON && KebaState.state == 3 && KebaVehiclePlugged.state == ON && PowerFromGrid.state > 0) {
-		if (PVChargeCarType.state == 1) {
-			if ((KebaCurrentRangeA.state as Number) > 6) {
-				if ((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 200) / 690) > 6) {
-					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					KebaCurrentRangeA.sendCommand(6)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-			}
-		}
-		else if (PVChargeCarType.state == 2) {
-			if ((KebaCurrentRangeA.state as Number) > 12) {
-				if ((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 500) / 690) > 12) {
-					KebaCurrentRangeA.sendCommand((KebaCurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					KebaCurrentRangeA.sendCommand(12)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-			}
-		}
-	}
-end
-
-rule "rPVCharge2PowerMinus"
-when
-	Item PowerFromGrid changed
-then
-	if (PVCharge2Mode.state == ON && KebaDelay.state != ON && Keba2State.state == 3 && PowerFromGrid.state > 0) {
-		if (PVCharge2CarType.state == 1) {
-			if ((Keba2CurrentRangeA.state as Number) > 6) {
-				if ((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 200) / 690) > 6) {
-					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					Keba2CurrentRangeA.sendCommand(6)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-			}
-		}
-		else if (PVCharge2CarType.state == 2) {
-			if ((Keba2CurrentRangeA.state as Number) > 12) {
-				if ((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType + 500) / 690) > 12) {
-					Keba2CurrentRangeA.sendCommand((Keba2CurrentRangeA.state as DecimalType) - ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType) / 690))
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-				else {
-					Keba2CurrentRangeA.sendCommand(12)
-					KebaDelay.sendCommand(ON)
-					KebaOnOffDelay.sendCommand(ON)
-				}
-			}
-		}
-	}
+		else {
+			Keba2CurrentRange.sendCommand(Keba2CurrentRange.state as Number + KebaCurrentRangeDiff.state as Number)
+			KebaDelay.sendCommand(ON)
+			KebaOnOffDelay.sendCommand(ON)
+		}	
+	} 
 end
 
 rule "rPVChargeStopp"
@@ -220,7 +115,7 @@ when
 	Item PowerFromGrid changed
 then
 	if (KebaOnOffDelay.state != ON) {
-		if (PVChargeMode.state == ON && KebaEnabled.state == ON && PVCharge2Mode.state == ON && Keba2Enabled.state == ON) {
+		if (ChargeMode.state == 2 && KebaEnabled.state == ON && Charge2Mode.state == 2 && Keba2Enabled.state == ON) {
 			if ((PVChargeStoppLimit.state as Number) < (PVCharge2StoppLimit.state as Number)) {
 				if ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType ) > PVChargeStoppLimit.state as DecimalType)  {
 					KebaEnabled.sendCommand(OFF)
@@ -234,13 +129,13 @@ then
 				}
 			}
 		}
-		else if (PVChargeMode.state == ON && KebaEnabled.state == ON) {
+		else if (ChargeMode.state == 2 && KebaEnabled.state == ON) {
 			if ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType ) > PVChargeStoppLimit.state as DecimalType)  {
 				KebaEnabled.sendCommand(OFF)
 				KebaOnOffDelay.sendCommand(ON)
 			}
 		}
-		else if (PVCharge2Mode.state == ON && Keba2Enabled.state == ON) {
+		else if (Charge2Mode.state == 2 && Keba2Enabled.state == ON) {
 			if ((PowerFromGrid.state as DecimalType - OhmpilotACTotal.state as DecimalType ) > PVCharge2StoppLimit.state as DecimalType)  {
 				Keba2Enabled.sendCommand(OFF)
 				KebaOnOffDelay.sendCommand(ON)
@@ -251,59 +146,39 @@ end
 
 rule "rPVChargeResetA"
 when	
- 	Item PVChargeCarType changed or
 	Item KebaVehiclePlugged changed or
 	Item KebaState changed or
-	Item PVChargeMode changed	
+	Item ChargeMode changed	
 then
 	if (ChargeMode.state == 2) {
-		if (PVChargeCarType.state == 2) {
-			KebaCurrentRangeA.sendCommand(12)
-		}
-		else {
-			KebaCurrentRangeA.sendCommand(6)
-		}
+		KebaCurrentRange.sendCommand(0)
 	}
 	else {
-		KebaCurrentRangeA.sendCommand(16)
+		KebaCurrentRange.sendCommand(100)
 	}	
 end
 
-rule "rPVCharge2ResetA"
+//Renault Zoe, min. Current 12A
+rule "rPVCharge2ResetA" 
 when	
- 	Item PVCharge2CarType changed or
 	Item Keba2VehiclePlugged changed or
 	Item Keba2State changed or
-	Item PVCharge2Mode changed	
+	Item Charge2Mode changed	
 then
 	if (Charge2Mode.state == 2) {
-		if (PVCharge2CarType.state == 2) {
-			Keba2CurrentRangeA.sendCommand(12)
-		}
-		else {
-			Keba2CurrentRangeA.sendCommand(6)
-		}
+		Keba2CurrentRange.sendCommand(60)
 	}
 	else {
-		Keba2CurrentRangeA.sendCommand(16)
-	}
-end
-
-rule "rPVChargeZoeMinA"
-when
-	Item KebaCurrentRangeA changed
-then
-	if (PVChargeCarType.state == 2 && KebaCurrentRangeA.state < 12) {
-		KebaCurrentRangeA.sendCommand(12)
+		Keba2CurrentRange.sendCommand(100)
 	}
 end
 
 rule "rPVCharge2ZoeMinA"
 when
-	Item Keba2CurrentRangeA changed
+	Item Keba2CurrentRange changed
 then
-	if (PVCharge2CarType.state == 2 && Keba2CurrentRangeA.state < 12) {
-		Keba2CurrentRangeA.sendCommand(12)
+	if (Keba2CurrentRange.state < 60) {
+		Keba2CurrentRange.sendCommand(60)
 	}
 end
 
@@ -313,17 +188,14 @@ when
 	Item KebaVehiclePlugged changed
 then
 	if (ChargeMode.state == 1) {
-		PVChargeMode.sendCommand(OFF)
 		KebaEnabled.sendCommand(ON)
 	}
-	if(ChargeMode.state == 2) {
-		PVChargeMode.sendCommand(ON)
+	else if (ChargeMode.state == 2) {
 		KebaEnabled.sendCommand(OFF)
 		KebaDelay.sendCommand(OFF)
 		KebaOnOffDelay.sendCommand(OFF)
 	}
-	if (ChargeMode.state == 3) {
-		PVChargeMode.sendCommand(OFF)
+	else if (ChargeMode.state == 3) {
 		KebaEnabled.sendCommand(OFF)
 	}
 end
@@ -334,17 +206,14 @@ when
 	Item Keba2VehiclePlugged changed
 then
 	if (Charge2Mode.state == 1) {
-		PVCharge2Mode.sendCommand(OFF)
 		Keba2Enabled.sendCommand(ON)
 	}
-	if(Charge2Mode.state == 2) {
-		PVCharge2Mode.sendCommand(ON)
+	else if (Charge2Mode.state == 2) {
 		Keba2Enabled.sendCommand(OFF)
 		KebaDelay.sendCommand(OFF)
 		KebaOnOffDelay.sendCommand(OFF)
 	}
-	if (Charge2Mode.state == 3) {
-		PVCharge2Mode.sendCommand(OFF)
+	else if (Charge2Mode.state == 3) {
 		Keba2Enabled.sendCommand(OFF)
 	}
 end
@@ -378,7 +247,12 @@ when
 	Item ChargeStartH changed or
 	Item ChargeStartM changed
 then
-	ChargeStartTime.postUpdate(ChargeStartH.state.toString + ":" + ChargeStartM.state.toString)
+	if (ChargeStartM.state == 0) {
+		ChargeStartTime.postUpdate(ChargeStartH.state.toString + ":00")
+	}
+	else {
+		ChargeStartTime.postUpdate(ChargeStartH.state.toString + ":" + ChargeStartM.state.toString)
+	}
 end
 
 rule "rChargeStart2Time"
@@ -386,5 +260,10 @@ when
 	Item Charge2StartH changed or
 	Item Charge2StartM changed
 then
-	Charge2StartTime.postUpdate(Charge2StartH.state.toString + ":" + Charge2StartM.state.toString)
+	if (Charge2StartM.state == 0) {
+		Charge2StartTime.postUpdate(Charge2StartH.state.toString + ":00")
+	}
+	else {
+		Charge2StartTime.postUpdate(Charge2StartH.state.toString + ":" + Charge2StartM.state.toString)
+	}
 end

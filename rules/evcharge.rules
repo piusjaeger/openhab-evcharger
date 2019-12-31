@@ -158,7 +158,7 @@ then
 	}	
 end
 
-//Renault Zoe, min. Current 12A
+//Renault Zoe, min. Current 12A = 60%
 rule "rPVCharge2ResetA" 
 when	
 	Item Keba2VehiclePlugged changed or
@@ -173,12 +173,28 @@ then
 	}
 end
 
-rule "rPVCharge2ZoeMinA"
+rule "rPVChargeMinMaxA"
+when
+	Item KebaCurrentRange changed
+then
+	if (KebaCurrentRange.state < 0) {
+		KebaCurrentRange.sendCommand(0)
+	}
+	if (KebaCurrentRange.state > 100) {
+		KebaCurrentRange.sendCommand(100)
+	}
+end
+
+//Renault Zoe, min. Current 12A = 60%
+rule "rPVCharge2MinMaxA"
 when
 	Item Keba2CurrentRange changed
 then
 	if (Keba2CurrentRange.state < 60) {
 		Keba2CurrentRange.sendCommand(60)
+	}
+	if (Keba2CurrentRange.state > 100) {
+		Keba2CurrentRange.sendCommand(100)
 	}
 end
 

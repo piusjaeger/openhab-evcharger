@@ -4,7 +4,6 @@ when
 then
 	KebaOnOffDelay.sendCommand(OFF)
 	KebaDelay.sendCommand(OFF)
-	PoolHeatingOffTimer.sendCommand(OFF)
 end
 
 rule "rPVChargeStoppLimit"
